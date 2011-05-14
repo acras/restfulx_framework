@@ -35,9 +35,7 @@ package org.restfulx.services.http {
   import flash.net.URLVariables;
   import flash.utils.getQualifiedClassName;
   
-  import mx.rpc.AsyncToken;
   import mx.rpc.IResponder;
-  import mx.rpc.events.FaultEvent;
   import mx.rpc.events.ResultEvent;
   import mx.utils.ObjectUtil;
   
@@ -486,44 +484,65 @@ package org.restfulx.services.http {
       }
     }
     
-    protected function marshallToVO(object:Object, recursive:Boolean = false, toDelete:Boolean = false):Object {
-      var vo:Object = Rx.serializers.vo.marshall(object, recursive);
+    protected function marshallToVOWithDeepNesting(vo:Object, recursive:Boolean = false, 
+      toDelete:Boolean = false, nested:Boolean=false):Object {
       var result:Object = new Object;
       var localName:String = RxUtils.toSnakeCase(vo["clazz"]);
+      var attributePrefix:String = "";
+      var attributeSuffix:String = "";
+      if (!nested){
+        attributePrefix = localName + "[";
+        attributeSuffix = "]"; 
+      }
+      
       delete vo["clazz"];
       for (var property:String in vo) {
         if (vo[property] != null) {
           if (vo[property] is Array) {
             var embedded:Array = new Array;
             for each (var item:Object in vo[property] as Array) {
-              if (item.hasOwnProperty("clazz")) {
-                delete item["clazz"];
+              if (!toDelete){
+                if (recursive)
+                  embedded.push(marshallToVOWithDeepNesting(item, true, false, true));
+                else{
+                  if (item.hasOwnProperty("clazz")) {
+                    delete item["clazz"];
+                  }
+                  embedded.push(item);
+                }
               }
-              if (!toDelete) {
-                embedded.push(item);
-              } else {
+              else {
                 embedded.push({"id": item["id"], "_delete": "1"});
               }
             }
-            result[localName + "[" + property + "_attributes]"] = JSON.encode(embedded);
+            if (!nested)
+              result[attributePrefix + property + "_attributes" + attributeSuffix] = JSON.encode(embedded);
+            else
+              result[attributePrefix + property + "_attributes" + attributeSuffix] = embedded;
           } else if (vo[property] is String) {
-            if (!toDelete) result[localName + "[" + property + "]"] = vo[property];
+              if (!toDelete) result[attributePrefix + property + attributeSuffix] = vo[property];
           } else {
             if (vo[property].hasOwnProperty("clazz")) {
               delete vo[property]["clazz"];
             }
             if (!toDelete) {
-              result[localName + "[" + property + "_attributes]"] = JSON.encode(vo[property]);
+              result[attributePrefix + property + "_attributes" + attributeSuffix] = JSON.encode(vo[property]);
             } else {
-              result[localName + "[" + property + "_attributes]"] = JSON.encode({"id": vo[property]["id"], "_delete": "1"});
+              result[attributePrefix + property + "_attributes" + attributeSuffix] = JSON.encode({"id": vo[property]["id"], "_delete": "1"});
             }
           }
         } else {
           /* we serialize nulls using empty strings for form-based submits */
-          result[localName + "[" + property + "]"] = "";
+          result[attributePrefix + property + attributeSuffix] = "";
         }
       }
       return result;
+    }
+      
+    protected function marshallToVO(object:Object, recursive:Boolean = false, 
+      toDelete:Boolean = false):Object {
+      var vo:Object = Rx.serializers.vo.marshall(object, recursive);
+      return marshallToVOWithDeepNesting(vo, recursive, toDelete);
     }
     
     protected function marshallToURLVariables(source:Object):URLVariables {

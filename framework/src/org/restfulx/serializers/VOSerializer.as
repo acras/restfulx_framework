@@ -149,7 +149,7 @@ package org.restfulx.serializers {
           var embedded:Array = new Array;
           for each (var item:Object in object[nodeName]) {
             if (item != parent) {
-              embedded.push(marshallToVO(item, false, metadata, object));
+              embedded.push(marshallToVO(item, true, metadata, object));
             }
           }
           result[snakeName] = embedded;        
