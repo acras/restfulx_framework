@@ -89,7 +89,7 @@ package org.restfulx.controllers {
    */
   public class ServerPushController extends EventDispatcher {
     
-    private static var socket:XMLSocket;
+    public static var socket:XMLSocket;
     
     /** options for configuring ServerPushController such as channels */
     public var opts:Object;

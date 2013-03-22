@@ -29,23 +29,19 @@ package org.restfulx.controllers {
   import flash.net.URLLoader;
   import flash.net.URLRequest;
   import flash.net.URLRequestHeader;
-  import flash.net.URLRequestMethod;
   import flash.net.URLVariables;
-  import flash.net.URLLoaderDataFormat;
   import flash.utils.ByteArray;
-  import flash.utils.getQualifiedClassName;
   
   import mx.collections.ItemResponder;
   import mx.managers.CursorManager;
-  import mx.rpc.AsyncToken;
   import mx.rpc.IResponder;
-  import mx.rpc.events.FaultEvent;
   import mx.rpc.events.ResultEvent;
   import mx.utils.ObjectUtil;
   
   import org.restfulx.Rx;
   import org.restfulx.serializers.ISerializer;
   import org.restfulx.serializers.XMLSerializer;
+  import org.restfulx.services.http.XMLHTTPServiceProvider;
   import org.restfulx.utils.RxUtils;
   
   /**
@@ -344,7 +340,7 @@ package org.restfulx.controllers {
     
     protected function unmarshallAndCacheResultHandler(data:Object, token:Object = null):void {
       var result:Object = unmarshall(data);
-      if (result) cacheHandler(result);
+      if (result) cacheHandler(result, Rx.services.getServiceProvider(XMLHTTPServiceProvider.ID));
       if (result && resultHandler != null) resultHandler(result);
     }
     

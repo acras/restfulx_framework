@@ -32,7 +32,7 @@ package org.restfulx.services {
   public class GenericServiceErrors implements IServiceErrors {
     
     /** error holder */
-    protected var errors:Object = new Object;
+    public var errors:Object = new Object;
 
     public function GenericServiceErrors() {}
 
